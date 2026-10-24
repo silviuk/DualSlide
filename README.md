@@ -1,92 +1,97 @@
-# DualSlide 0.5.2
+# DualSlide
 
+<img src="assets/DualSlide.svg" width="96" alt="DualSlide: two synchronized displays">
 
+DualSlide is a small Windows app that presents two matching PowerPoint decks on separate displays. Control the presenter deck normally while the audience deck follows its slides, animation steps, and pointer movements. Use it for translated presentations, presenter-only notes in a parallel deck, or any pair of presentations that share the same structure.
 
-DualSlide runs two native PowerPoint slideshows on separate Windows displays. Operate the presenter show normally; the audience show follows its slide and animation step. An antialiased audience pointer mirrors the presenter pointer or laser.
+PowerPoint renders both slideshows and their animations. DualSlide controls two native slideshow windows in one PowerPoint application; it does not convert slides or implement a presentation renderer.
 
+## Features
 
+- Synchronizes ordinary clicks, keyboard navigation, mouse-wheel navigation, and animation steps, including Appear effects.
+- Mirrors the presenter pointer as an antialiased laser on the audience display.
+- Supports separate display scaling settings and fits each slideshow to its selected screen.
+- Uses Windows display names, with an Identify displays button and automatic prevention of duplicate display selections.
+- Remembers recent presentations and their paired decks in either selection direction.
+- Adapts to Windows light/dark mode and accent color.
+- Provides Pause, Stop, and Reset current slide controls. Escape or ending either slideshow stops the paired session.
+- Opens original presentations read-only, holds write-denying file handles, and closes app-owned decks without saving or prompting. No presentation copies are created.
+- Runs one controller per Windows session and includes a recovery watchdog for stalled PowerPoint calls.
 
-Extract `DualSlide-0.5.2.zip` to a folder and run `DualSlide.exe`. Requires Windows 11, desktop PowerPoint, and two extended displays. No installer or .NET SDK download is required.
+## Requirements
 
+- Windows 11 on an x64 PC.
+- Microsoft PowerPoint desktop installed and configured; PowerPoint for the web is not supported.
+- Two displays in Windows **Extend** mode.
+- Two presentations with matching slide counts, aspect ratios, and ordinary animation sequences.
 
+## Download and use
 
-## Changes in 0.5.2
+1. Download `DualSlide-0.5.2.zip` from [Releases](https://github.com/silviuk/DualSlide/releases/latest).
+2. Extract the ZIP and run `DualSlide.exe`. No installer or .NET SDK download is needed.
+3. Select the presenter and audience decks, then choose a different display for each. Use **Identify displays** if needed.
+4. Optionally enable **Start with laser pointer**, then select **Start**.
+5. Operate the presenter slideshow as usual. Press **Escape** to end both shows.
 
-- Added a two-display synchronization icon to the executable, taskbar, and window. The editable vector source is `assets/DualSlide.svg`; Windows uses the derived multi-resolution `assets/DualSlide.ico`.
-- To regenerate the ICO after editing the SVG, run `node tools/build-icon.cjs` with the `sharp` Node package available. Normal builds use the committed ICO and need no additional dependency.
+Close any editable PowerPoint session using these files before starting. Existing read-only decks can be reused; DualSlide leaves borrowed decks open and preserves their existing unsaved edits when the session ends.
 
-## Changes in 0.5.1
+Settings and paired file history are stored under `%LOCALAPPDATA%\DualSlide`. Diagnostics are written to `DualSlide.log` in that directory. See the [user guide](USER_GUIDE.md) for controls and troubleshooting.
 
-- Fixed missing audience content for ordinary Appear/entrance animations. PowerPoint's GotoClick could update the audience click index while leaving its entrance objects invisible. Audience synchronization now plays native Next steps; backwards movement resets the audience slide and replays to the desired step.
-- Catch-up is bounded to eight native steps per poll, with retries when PowerPoint is transitioning. Ordinary animation steps no longer use GotoClick.
-- Added a regression that distinguishes reported animation index from rendered content, and an explicit colored-object Appear visual test.
+## Build from source
 
-## Changes in 0.5
+Run these commands in PowerShell from the repository root:
 
-- Fixed mixed-DPI cropping with the LG as primary and the internal display as audience. PowerPoint runs native windowed slideshows with borders/scrollbars removed and the canvas fitted to each display. Both slide rendering and animations remain in PowerPoint. Old maximized bounds and MDI canvas padding are cleared, and delayed DPI placement changes are corrected.
-- Each slideshow frame is obtained from its exact PowerPoint COM window, rather than guessing from global window creation or foreground focus.
-- Input hooks run on their own message-pump thread. The pointer has no cross-process owner. Presentation windows are not forced always on top, and synchronization cannot recursively enter its timer.
-- A 15-second stall watchdog removes input hooks, hides the replicated pointer, requests asynchronous minimization of the paired windows, and requests cancellation of the blocked COM call. Coordinated no-save cleanup runs when control returns. It never kills PowerPoint or closes unrelated documents. A hard Office/driver hang is not guaranteed to accept cancellation or minimization.
-- Only one controller can run per Windows session, including copies in other folders. A second launch exits and asks the existing window to activate.
-- Diagnostic startup/error/recovery records are written to `%LOCALAPPDATA%\DualSlide\DualSlide.log`.
+```powershell
+.\build.ps1
+```
 
-## Changes in 0.4
+The executable is written to `dist/DualSlide.exe`. The build uses the Windows .NET Framework C# compiler and WPF assemblies at `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`; no NuGet restore or Office interop package is required. PowerPoint is needed to run a presentation, but not to compile the app.
 
-- Escape is consumed on either paired slideshow and routes through one coordinated shutdown. Ending either native slideshow also closes its paired show, even while paused or after focus moves away.
-- Tool-owned presentations are marked for discard before exiting their shows and closed without saving. Minimized read-only editor windows prevent PowerPoint's automatic hidden-document close/save path. Busy close requests retry while the original-file write locks remain held.
-- Originals are opened directly read-only with their actual filenames. No presentation copies are created. A read-only file handle denies writes, replacement, and deletion for the session. Files already open for editing must be closed before starting; normally opened read-only presentations can be reused without discarding their existing unsaved edits.
-- Added the copyright notice and GitHub link to the window footer and copyright metadata to the executable.
-- Pointer shutdown no longer waits synchronously on the renderer, and pointer motion does not repeatedly reorder the foreign PowerPoint owner.
+To build a distributable ZIP and SHA-256 checksum:
 
-## Changes in 0.3
+```powershell
+.\package.ps1
+```
 
+This rebuilds the executable and produces `dist/DualSlide-0.5.2.zip` and its `.sha256` file, including documentation and icon assets. The version is read from the executable metadata.
 
+### Icon
 
-- Replaced the missing laser overlay with a WPF transparent surface owned by the audience slideshow. Its independent render thread handles alpha blending, cursor sampling, and monitor mapping.
+The editable icon source is [assets/DualSlide.svg](assets/DualSlide.svg). Windows uses the derived, multi-resolution `assets/DualSlide.ico` for the executable and window. Both are committed, so normal builds need no image tools. After editing the SVG, regenerate the ICO with Node.js and the `sharp` package available:
 
-- Wheel steps explicitly call Next/Previous on the presenter view, then synchronize the audience. The original wheel message is consumed while aimed at the active presenter, avoiding independent follower wheel actions. Other PowerPoint navigation remains native.
+```powershell
+node tools/build-icon.cjs
+```
 
-- Added recent-file dropdowns and paired selection in either direction. The latest used pairing wins. History and display choices persist under `%LOCALAPPDATA%\DualSlide`, including across updates or running from a different folder.
+## Automated builds and releases
 
-- Display selectors automatically resolve collisions in either direction.
+[GitHub Actions](https://github.com/silviuk/DualSlide/actions) builds on pushes to `main`, pull requests, version tags, and manual dispatch. The Windows runner compiles the app, runs the animation replay regression without PowerPoint, and uploads the ZIP and checksum as workflow artifacts.
 
-- Refreshed the setup layout, rounded selectors and buttons, light/dark colors, and Windows accent color. Buttons clear their corners instead of leaving native border artifacts.
+Pushing a tag such as `v0.5.2` also publishes a GitHub release with those artifacts after the build and regression pass. The workflow rejects tags that do not match the executable version. Release publishing uses the repository's `GITHUB_TOKEN`; no personal access token is required.
 
+## Verification and limits
 
+Run the animation replay regression without opening presentations:
 
-## Architecture and scope
+```powershell
+New-Item -ItemType Directory -Force .build | Out-Null
+.\test-build.ps1 -Source AnimationReplayTest.cs -Main AnimationReplayTest -Output .build\AnimationReplayTest.exe
+& .\.build\AnimationReplayTest.exe
+if ($LASTEXITCODE -ne 0) { throw 'Animation replay regression failed' }
+```
 
+PowerPoint and two displays are required for the interactive tests documented in [VERIFICATION.md](VERIFICATION.md). `AppearVisualTest.cs` creates disposable test decks. Other session tests use a local matching pair named `test-master.pptx` and `test-follower.pptx`; local presentations and diagnostic outputs are excluded from Git.
 
+Synchronization follows PowerPoint's slide/build state and is not frame-locked. Shape-specific animation triggers, ink mirroring, and synchronized audio/video clocks are outside scope. A hard Office or graphics-driver hang may not accept the watchdog's cancellation or minimization requests.
 
-Two slideshow windows run in one PowerPoint application. PowerPoint renders the decks and animations. DualSlide compares native slide/build state every 50 ms and retries transient busy errors. The pointer runs independently at approximately 60 Hz. Timing is not frame-locked.
+## Source layout
 
+| File | Responsibility |
+| --- | --- |
+| `DualSlide.cs` | Setup window, PowerPoint sessions, navigation, and animation synchronization |
+| `PointerRenderer.cs` | Independent WPF laser rendering and display mapping |
+| `ModernWindows.cs` | Theme, accent color, display discovery, and identification |
+| `DeckHistory.cs` | Recent presentations and paired selections |
+| `SessionSafety.cs` | Single-instance handling, input hooks, recovery, and logging |
 
-
-Decks must have matching technical structure: slide counts, aspect ratio, and animation logic. Ordinary click/arrow animation sequences are supported. Shape-specific triggers, ink mirroring, and synchronized audio/video clocks are outside scope.
-
-
-
-Files are opened directly read-only, retaining their filenames. Already-open read-only presentations can be reused and remain open after Stop, including unsaved edits. Presentations open for editing are refused so original-file write protection is maintained. DualSlide never saves either presentation.
-
-
-
-## Build and verification
-
-
-
-Run `build.ps1`. It uses the Windows .NET Framework compiler and WPF assemblies already present on Windows. Output: `dist/DualSlide.exe`.
-
-
-
-Sources: `DualSlide.cs`, `PointerRenderer.cs`, `ModernWindows.cs`, `DeckHistory.cs`, `SessionSafety.cs`.
-
-
-
-`test-build.ps1` builds an individual diagnostic harness. Current checks are `ShutdownTest.cs`, `SessionTest.cs` (optional argument swaps displays), `SafetyTest.cs`, `OwnershipTest.cs`, and `FeatureCheck.cs`; `VisualSessionTest.cs` adds disposable in-memory corner markers for interactive geometry/laser inspection. Tests isolate their preferences from the application's normal settings. `AnimationReplayTest.cs` checks animation replay without opening decks; `AppearVisualTest.cs` creates its own disposable test decks. Tests that reference `test-master.pptx` and `test-follower.pptx` require a local pair of matching test presentations; presentation files and generated diagnostics are excluded from Git.
-
-
-
-See `USER_GUIDE.md` for controls and `VERIFICATION.md` for evidence and limits. Development decks and harnesses are not required by the packaged application.
-
-
-Copyright (C) 2026 Silviu Vlasceanu. Project: https://github.com/silviuk/DualSlide
+Copyright (C) 2026 Silviu Vlasceanu. [GitHub project](https://github.com/silviuk/DualSlide).

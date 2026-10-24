@@ -1,8 +1,9 @@
-# Icon update 0.5.2 (2026-10-24)
+# Version 0.5.2 (2026-10-24)
 
 - Built the executable with the SVG-derived native Windows icon and embedded window icon. Both resources load successfully through System.Drawing.Icon.
 - Checked the SVG rendering and all nine ICO sizes: 16, 20, 24, 32, 40, 48, 64, 128, and 256 pixels.
-- Only artwork, icon integration, version metadata, and documentation changed; PowerPoint synchronization behavior is unchanged.
+- Rebuilt the application and ran AnimationReplayTest successfully: forward/backward rendering, reset, bounded catch-up, slide changes, and transient busy retry.
+- Added a repeatable ZIP/checksum packaging script and Windows build/release workflow. Package contents were checked locally. PowerPoint synchronization behavior is unchanged.
 
 # Verification — DualSlide 0.5.1, 2026-10-24
 
