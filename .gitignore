@@ -29,6 +29,9 @@ node_modules/
 !/DeckHistory.cs
 !/SessionSafety.cs
 !/AnimationReplayTest.cs
+!/CleanupRegressionTest.cs
+!/PointerRegressionTest.cs
+!/PowerPointLifecycleTest.cs
 !/AppearVisualTest.cs
 !/ShutdownTest.cs
 !/SessionTest.cs

@@ -39,6 +39,15 @@ jobs:
           ./test-build.ps1 -Source AnimationReplayTest.cs -Main AnimationReplayTest -Output .build/AnimationReplayTest.exe
           & ./.build/AnimationReplayTest.exe
           if ($LASTEXITCODE -ne 0) { throw 'Animation replay regression failed' }
+      - name: Run pointer and application cleanup regressions
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          foreach ($test in @('PointerRegressionTest', 'CleanupRegressionTest')) {
+            ./test-build.ps1 -Source "$test.cs" -Main $test -Output (Join-Path $PWD ".build/$test.exe")
+            & ".build/$test.exe"
+            if ($LASTEXITCODE -ne 0) { throw "$test failed" }
+          }
       - name: Package application
         shell: pwsh
         run: ./package.ps1

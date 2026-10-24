@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Text;
-[assembly:System.Reflection.AssemblyVersion("0.5.2.0")]
-[assembly:System.Reflection.AssemblyFileVersion("0.5.2.0")]
+[assembly:System.Reflection.AssemblyVersion("0.5.3.0")]
+[assembly:System.Reflection.AssemblyFileVersion("0.5.3.0")]
 [assembly:System.Reflection.AssemblyCopyright("(C) 2026 Silviu Vlasceanu")]
 
 static class Program {
@@ -75,6 +75,7 @@ sealed class MainForm : Form {
     Button start=new ModernButton(), pause=new ModernButton(),stop=new ModernButton(),resync=new ModernButton();
     Label status=new Label(); CheckBox laser=new CheckBox();
     dynamic ppt,master,follower,masterShow,followerShow;
+    bool ownPowerPoint;
     bool ownMaster,ownFollower,synchronizing,stopping,cleaning,closeAfterStop,masterConfigured,followerConfigured;
     readonly List<System.IO.FileStream> sourceGuards=new List<System.IO.FileStream>();
     int masterType, followerType, masterPresenter, followerPresenter,masterScrollbar,followerScrollbar;
@@ -138,7 +139,7 @@ sealed class MainForm : Form {
     }
     public MainForm() {
         using(var iconStream=typeof(MainForm).Assembly.GetManifestResourceStream("DualSlide.Icon.ico")){if(iconStream!=null){using(var sourceIcon=new Icon(iconStream)){Icon=(Icon)sourceIcon.Clone();}}}
-        Text="DualSlide 0.5.2";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
+        Text="DualSlide 0.5.3";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
         var title=new Label{Text="Present together",Font=new Font("Segoe UI Variable Display",25,FontStyle.Bold),AutoSize=true,Location=new Point(28,25)};
         var subtitle=new Label{Text="Two PowerPoint decks, one presentation.",Tag="muted",AutoSize=true,Location=new Point(32,78)};
         Controls.AddRange(new Control[]{title,subtitle});
@@ -199,6 +200,9 @@ sealed class MainForm : Form {
             masterPath.Text=System.IO.Path.GetFullPath(masterPath.Text);followerPath.Text=System.IO.Path.GetFullPath(followerPath.Text);
             if(String.Equals(masterPath.Text,followerPath.Text,StringComparison.OrdinalIgnoreCase))throw new Exception("Choose two different deck files.");
             ProtectSource(masterPath.Text);ProtectSource(followerPath.Text);
+            // PowerPoint can reuse an existing process even through CreateInstance.
+            // Be conservative: never Quit if any PowerPoint was already running.
+            ownPowerPoint=!PowerPointRunning();
             ppt=Activator.CreateInstance(Type.GetTypeFromProgID("PowerPoint.Application",true));
             master=OpenDeck(masterPath.Text,out ownMaster);
             follower=OpenDeck(followerPath.Text,out ownFollower);
@@ -230,19 +234,25 @@ sealed class MainForm : Form {
         try{sourceGuards.Add(new System.IO.FileStream(path,System.IO.FileMode.Open,System.IO.FileAccess.Read,System.IO.FileShare.Read));}
         catch(System.IO.IOException){throw new Exception("Cannot lock the original against changes. Close any editor using this file, then try again: "+path);}
     }
+    static bool PowerPointRunning(){var processes=Process.GetProcessesByName("POWERPNT");try{return processes.Length!=0;}finally{foreach(var process in processes)process.Dispose();}}
+    static void ReleaseCom(object value){if(value!=null&&Marshal.IsComObject(value))Marshal.ReleaseComObject(value);}
     dynamic OpenDeck(string path,out bool owned){
         string full=System.IO.Path.GetFullPath(path);
-        foreach(dynamic deck in ppt.Presentations){if(String.Equals((string)deck.FullName,full,StringComparison.OrdinalIgnoreCase)){
+        dynamic presentations=ppt.Presentations;
+        try{
+        // Indexed access avoids retaining Office's hidden COM enumerator.
+        for(int i=1;i<=(int)presentations.Count;i++){dynamic deck=presentations[i];bool retained=false;try{if(String.Equals((string)deck.FullName,full,StringComparison.OrdinalIgnoreCase)){
             owned=false;
             if((int)deck.ReadOnly==0)throw new Exception("This presentation is open for editing. Close it in PowerPoint before starting DualSlide: "+full);
             if((int)deck.Windows.Count==0)throw new Exception("This presentation is open invisibly in another session. Close that session first: "+full);
-            return deck;
-        }}
+            retained=true;return deck;
+        }}finally{if(!retained)ReleaseCom((object)deck);}}
         // Retain a real editor window so PowerPoint cannot auto-close a hidden,
         // dirty presentation (and prompt to save) when its native slideshow exits.
-        owned=true;dynamic opened=ppt.Presentations.Open(full,-1,0,-1);
+        owned=true;dynamic opened=presentations.Open(full,-1,0,-1);
         // Leave the editor restored until PowerPoint initializes the slideshow renderer.
         return opened;
+        }finally{ReleaseCom((object)presentations);}
     }
     dynamic RunShow(dynamic deck,Screen screen,out IntPtr h,out IntPtr canvas){
         deck.Windows[1].WindowState=1;deck.Windows[1].Activate();
@@ -363,14 +373,30 @@ sealed class MainForm : Form {
     void FinishStop(){
         if(!stopping||cleaning)return;cleaning=true;
         try{
-            if(CloseDeck(master,masterShow,masterHandle,ownMaster,masterType,masterPresenter,masterScrollbar,masterConfigured)){master=masterShow=null;masterHandle=masterCanvas=IntPtr.Zero;}
-            if(CloseDeck(follower,followerShow,followerHandle,ownFollower,followerType,followerPresenter,followerScrollbar,followerConfigured)){follower=followerShow=null;followerHandle=followerCanvas=IntPtr.Zero;}
+            if(CloseDeck(master,masterShow,masterHandle,ownMaster,masterType,masterPresenter,masterScrollbar,masterConfigured)){ReleaseCom((object)masterShow);ReleaseCom((object)master);master=masterShow=null;masterHandle=masterCanvas=IntPtr.Zero;}
+            if(CloseDeck(follower,followerShow,followerHandle,ownFollower,followerType,followerPresenter,followerScrollbar,followerConfigured)){ReleaseCom((object)followerShow);ReleaseCom((object)follower);follower=followerShow=null;followerHandle=followerCanvas=IntPtr.Zero;}
             if(master!=null||follower!=null)return;
-            ppt=null;ownMaster=ownFollower=masterConfigured=followerConfigured=false;
+            if(!ClosePowerPoint())return;
+            ownMaster=ownFollower=masterConfigured=followerConfigured=false;
             foreach(var guard in sourceGuards)guard.Dispose();sourceGuards.Clear();
             watchdog.Disarm();stopping=false;paused=false;sourceRect=targetRect=Rectangle.Empty;
             start.Enabled=true;foreach(var control in configuration)control.Enabled=true;pause.Text="Pause";status.Text="Stopped. Original files unchanged.";
             if(closeAfterStop){closeAfterStop=false;BeginInvoke((Action)(()=>{if(!IsDisposed)Close();}));}
         }finally{cleaning=false;}
+    }
+    bool ClosePowerPoint(){
+        if(ppt==null){ownPowerPoint=false;return true;}
+        try{
+            if(ownPowerPoint){
+                dynamic presentations=ppt.Presentations;
+                try{if((int)presentations.Count==0)ppt.Quit();}
+                finally{ReleaseCom((object)presentations);}
+            }
+        }catch(COMException ex){if(!Gone(ex)){status.Text="Waiting for PowerPoint to quit...";return false;}}
+        ReleaseCom((object)ppt);ppt=null;ownPowerPoint=false;
+        // Dynamic Office property chains create temporary RCWs. Drain those after
+        // all shows and decks close so they cannot keep our Office server alive.
+        GC.Collect();GC.WaitForPendingFinalizers();GC.Collect();GC.WaitForPendingFinalizers();
+        return true;
     }
 }
