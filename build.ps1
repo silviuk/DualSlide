@@ -1,0 +1,5 @@
+﻿$ErrorActionPreference = 'Stop'
+$compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+New-Item -ItemType Directory -Force -Path (Join-Path $PSScriptRoot 'dist') | Out-Null
+& $compiler /nologo /target:winexe /win32icon:"$PSScriptRoot\assets\DualSlide.ico" "/resource:$PSScriptRoot\assets\DualSlide.ico,DualSlide.Icon.ico" /win32manifest:"$PSScriptRoot\app.manifest" /platform:x64 /out:"$PSScriptRoot\dist\DualSlide.exe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:Microsoft.CSharp.dll /reference:"$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll" /reference:"$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll" /reference:"$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll" /reference:System.Xaml.dll "$PSScriptRoot\DualSlide.cs" "$PSScriptRoot\PointerRenderer.cs" "$PSScriptRoot\ModernWindows.cs" "$PSScriptRoot\DeckHistory.cs" "$PSScriptRoot\SessionSafety.cs"
+if ($LASTEXITCODE -ne 0) { throw 'Build failed' }

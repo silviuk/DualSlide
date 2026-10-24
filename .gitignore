@@ -1,0 +1,38 @@
+# Build products, release archives, and local dependencies
+/.build/
+/dist/
+/release/
+/output/
+node_modules/
+*.exe
+*.dll
+*.pdb
+*.zip
+
+# Local presentations and diagnostic output
+*.pptx
+*.ppt
+*.ppsx
+*-results.txt
+/*.png
+*.log
+.vs/
+.vscode/
+.env
+.env.*
+
+# Historical scratch probes stay local; publish the application and current tests.
+/*.cs
+!/DualSlide.cs
+!/PointerRenderer.cs
+!/ModernWindows.cs
+!/DeckHistory.cs
+!/SessionSafety.cs
+!/AnimationReplayTest.cs
+!/AppearVisualTest.cs
+!/ShutdownTest.cs
+!/SessionTest.cs
+!/SafetyTest.cs
+!/OwnershipTest.cs
+!/FeatureCheck.cs
+!/VisualSessionTest.cs
