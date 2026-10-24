@@ -47,13 +47,15 @@ The last file and display selections are restored on restart. Preferences are st
 
 - Wheel down advances one PowerPoint animation/slide step; wheel up goes back. The wheel is routed explicitly to the active presenter view while the cursor is over its slideshow.
 
-- Move the mouse over the presenter slide to show the corresponding audience pointer.
+- Move the mouse over the presenter slide to show the corresponding audience pointer. The normal pointer uses the native cursor image and hotspot. The red laser uses a small ring and soft halo matching PowerPoint's style; it is independently rendered and is not a pixel-identical copy of Office's laser. Custom laser colors are not currently mirrored.
 
 - Ctrl+L selects the laser; Ctrl+A returns to an arrow. Ctrl+left-drag also mirrors a temporary laser gesture.
 
 - B and W mirror black/white screen modes.
 
 - Escape on either slideshow stops both shows without saving or asking to save. Ending either show through PowerPoint's End Show command also stops the paired session, including while synchronization is paused.
+
+- Reaching the end of the deck keeps both shows on the last slide with its completed animations. Further ordinary forward keys, clicks, or wheel steps do not end the session. You can go backward and forward again; press Escape when you are ready to exit.
 
 
 
@@ -82,4 +84,4 @@ Copyright (C) 2026 Silviu Vlasceanu. The footer links to https://github.com/silv
 
 Input handling runs independently of PowerPoint. If the controller stops responding for 15 seconds, recovery removes its input hooks, hides its pointer, requests that both slideshow windows minimize, and requests cancellation of the stalled Office call. Once control returns, both shows close through the normal no-save path. Original-file write guards remain held until cleanup completes.
 
-Presentation windows are ordinary windows, so other applications can cover them. DualSlide does not terminate PowerPoint automatically. A hard Office or graphics-driver hang may reject cancellation/minimization; retain `%LOCALAPPDATA%\DualSlide\DualSlide.log` when reporting a problem.
+Presentation windows are ordinary windows, so other applications can cover them. On Stop, DualSlide quits PowerPoint if it started the process and no presentations remain. A pre-existing PowerPoint process or any remaining presentations are preserved. DualSlide never force-kills PowerPoint. A hard Office or graphics-driver hang may reject cancellation/minimization; retain `%LOCALAPPDATA%\DualSlide\DualSlide.log` when reporting a problem.

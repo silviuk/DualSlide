@@ -9,13 +9,14 @@ PowerPoint renders both slideshows and their animations. DualSlide controls two 
 ## Features
 
 - Synchronizes ordinary clicks, keyboard navigation, mouse-wheel navigation, and animation steps, including Appear effects.
-- Mirrors the presenter pointer as an antialiased laser on the audience display.
+- Mirrors the presenter's native cursor shape and hotspot, with a PowerPoint-style ring and halo in laser mode.
 - Supports separate display scaling settings and fits each slideshow to its selected screen.
 - Uses Windows display names, with an Identify displays button and automatic prevention of duplicate display selections.
 - Remembers recent presentations and their paired decks in either selection direction.
 - Adapts to Windows light/dark mode and accent color.
 - Provides Pause, Stop, and Reset current slide controls. Escape or ending either slideshow stops the paired session.
-- Opens original presentations read-only, holds write-denying file handles, and closes app-owned decks without saving or prompting. No presentation copies are created.
+- Holds both shows on the final slide until you exit, allowing backward/forward navigation without restarting.
+- Opens original presentations read-only, holds write-denying file handles, and closes app-owned decks without saving or prompting. Quits PowerPoint when DualSlide started it and no presentations remain. No presentation copies are created.
 - Runs one controller per Windows session and includes a recovery watchdog for stalled PowerPoint calls.
 
 ## Requirements
@@ -27,7 +28,7 @@ PowerPoint renders both slideshows and their animations. DualSlide controls two 
 
 ## Download and use
 
-1. Download `DualSlide-0.5.2.zip` from [Releases](https://github.com/silviuk/DualSlide/releases/latest).
+1. Download `DualSlide-0.5.4.zip` from [Releases](https://github.com/silviuk/DualSlide/releases/latest).
 2. Extract the ZIP and run `DualSlide.exe`. No installer or .NET SDK download is needed.
 3. Select the presenter and audience decks, then choose a different display for each. Use **Identify displays** if needed.
 4. Optionally enable **Start with laser pointer**, then select **Start**.
@@ -53,7 +54,7 @@ To build a distributable ZIP and SHA-256 checksum:
 .\package.ps1
 ```
 
-This rebuilds the executable and produces `dist/DualSlide-0.5.2.zip` and its `.sha256` file, including documentation and icon assets. The version is read from the executable metadata.
+This rebuilds the executable and produces `dist/DualSlide-0.5.4.zip` and its `.sha256` file, including documentation and icon assets. The version is read from the executable metadata.
 
 ### Icon
 
@@ -67,7 +68,7 @@ node tools/build-icon.cjs
 
 [GitHub Actions](https://github.com/silviuk/DualSlide/actions) builds on pushes to `main`, pull requests, version tags, and manual dispatch. The Windows runner compiles the app, runs the animation replay regression without PowerPoint, and uploads the ZIP and checksum as workflow artifacts.
 
-Pushing a tag such as `v0.5.2` also publishes a GitHub release with those artifacts after the build and regression pass. The workflow rejects tags that do not match the executable version. Release publishing uses the repository's `GITHUB_TOKEN`; no personal access token is required.
+Pushing a tag such as `v0.5.4` also publishes a GitHub release with those artifacts after the build and regression pass. The workflow rejects tags that do not match the executable version. Release publishing uses the repository's `GITHUB_TOKEN`; no personal access token is required.
 
 ## Verification and limits
 
@@ -89,7 +90,7 @@ Synchronization follows PowerPoint's slide/build state and is not frame-locked. 
 | File | Responsibility |
 | --- | --- |
 | `DualSlide.cs` | Setup window, PowerPoint sessions, navigation, and animation synchronization |
-| `PointerRenderer.cs` | Independent WPF laser rendering and display mapping |
+| `PointerRenderer.cs` | Native cursor copying, WPF laser rendering, and display mapping |
 | `ModernWindows.cs` | Theme, accent color, display discovery, and identification |
 | `DeckHistory.cs` | Recent presentations and paired selections |
 | `SessionSafety.cs` | Single-instance handling, input hooks, recovery, and logging |

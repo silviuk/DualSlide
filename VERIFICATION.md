@@ -1,3 +1,20 @@
+# Version 0.5.4 (2026-10-24)
+
+- End-of-deck handling retains both live shows on the final slide. Forward keyboard commands and wheel steps are guarded before calling native Next; terminal clicks are suppressed. A native done/end screen returns to Last without resetting its completed animations. Escape still uses coordinated no-save shutdown.
+- AnimationReplayTest passed its new final-build clamp, end-screen recovery, and backward-navigation cases.
+- EndOfDeckTest passed with two disposable PowerPoint decks, each containing two slides and two Appear builds per slide: retained final build 2, repeated forward clamp, actual native done-state recovery, backward/forward navigation, and Escape exit. Test decks use a unique .build/end-deck-* directory.
+
+# Version 0.5.3 (2026-10-24)
+
+- Build and AnimationReplayTest passed.
+- PointerRegressionTest passed: native cursor transparency and hotspot, 1,000 bitmap conversions without GDI handle growth, and rendered laser ring/center/halo assertions. Uses the system Hand cursor because desktop capture tooling may replace the system Arrow with transparent artwork.
+- CleanupRegressionTest passed: owned empty application quits, pre-existing application and newly opened user documents are preserved, busy Quit retries, repeated cleanup is safe.
+- PowerPointLifecycleTest passed on desktop PowerPoint with two displays: generated disposable decks in a separate process, started DualSlide from a closed PowerPoint baseline, stopped both shows, and verified POWERPNT exited while the controller process remained alive.
+- Existing ShutdownTest passed all five exit paths, source hashes/timestamps and write-lock checks, unrelated-document preservation, and busy-close retry. OwnershipTest passed borrowed read-only document/unsaved-edit preservation.
+- Inspected PowerPoint's native red laser on a disposable white slide. GetCursorInfo reports a null cursor while the laser is visibly drawn in the slide surface. Normal cursors therefore use native bitmap copying; the laser remains a separately drawn ring/halo. No claim of pixel-identical laser matching or custom-color mirroring is made.
+
+Run the new Office-free regressions with test-build.ps1 and the corresponding test main classes. PowerPointLifecycleTest requires PowerPoint closed and two displays, and creates its own unique .build/lifecycle-* folder for disposable decks.
+
 # Version 0.5.2 (2026-10-24)
 
 - Built the executable with the SVG-derived native Windows icon and embedded window icon. Both resources load successfully through System.Drawing.Icon.
