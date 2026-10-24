@@ -94,4 +94,8 @@ Synchronization follows PowerPoint's slide/build state and is not frame-locked. 
 | `DeckHistory.cs` | Recent presentations and paired selections |
 | `SessionSafety.cs` | Single-instance handling, input hooks, recovery, and logging |
 
+## Support the project
+
+If DualSlide is useful to you, you can [leave a tip on Ko-fi](https://ko-fi.com/silviuvlasceanu).
+
 Copyright (C) 2026 Silviu Vlasceanu. [GitHub project](https://github.com/silviuk/DualSlide).
