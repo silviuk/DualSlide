@@ -1,3 +1,9 @@
+# Version 0.5.4 (2026-10-24)
+
+- End-of-deck handling retains both live shows on the final slide. Forward keyboard commands and wheel steps are guarded before calling native Next; terminal clicks are suppressed. A native done/end screen returns to Last without resetting its completed animations. Escape still uses coordinated no-save shutdown.
+- AnimationReplayTest passed its new final-build clamp, end-screen recovery, and backward-navigation cases.
+- EndOfDeckTest passed with two disposable PowerPoint decks, each containing two slides and two Appear builds per slide: retained final build 2, repeated forward clamp, actual native done-state recovery, backward/forward navigation, and Escape exit. Test decks use a unique .build/end-deck-* directory.
+
 # Version 0.5.3 (2026-10-24)
 
 - Build and AnimationReplayTest passed.

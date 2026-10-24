@@ -1,4 +1,6 @@
-# DualSlide 0.5.3
+# DualSlide 0.5.4
+
+- Keep both shows on the last slide at the end of the deck, preserving completed animations and backward/forward navigation. Ordinary forward input is clamped at the final build; Escape still exits both shows.
 
 - Replaced the hand-drawn audience arrow with the presenter's native cursor image, including transparency, hotspot, and proportional DPI scaling.
 - Changed the audience laser from a solid dot with an offset highlight to a centered ring with a soft halo. This matches PowerPoint's red-laser style, but remains an independent approximation; custom Office laser colors are not mirrored.
@@ -13,6 +15,6 @@ DualSlide presents two matching PowerPoint decks on separate Windows displays, w
 - Original presentations opened directly read-only, coordinated no-save shutdown, single-instance handling, and recovery for stalled PowerPoint calls.
 - Project-focused documentation and automated Windows builds, regression checks, release packaging, and SHA-256 checksums.
 
-Download and extract `DualSlide-0.5.3.zip`, then run `DualSlide.exe`. Requires Windows 11 x64, desktop PowerPoint, and two extended displays. Decks must have matching slide and animation structure.
+Download and extract `DualSlide-0.5.4.zip`, then run `DualSlide.exe`. Requires Windows 11 x64, desktop PowerPoint, and two extended displays. Decks must have matching slide and animation structure.
 
 The executable is not code-signed. See the README and user guide in the ZIP for usage and limitations.

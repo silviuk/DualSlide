@@ -5,8 +5,8 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Text;
-[assembly:System.Reflection.AssemblyVersion("0.5.3.0")]
-[assembly:System.Reflection.AssemblyFileVersion("0.5.3.0")]
+[assembly:System.Reflection.AssemblyVersion("0.5.4.0")]
+[assembly:System.Reflection.AssemblyFileVersion("0.5.4.0")]
 [assembly:System.Reflection.AssemblyCopyright("(C) 2026 Silviu Vlasceanu")]
 
 static class Program {
@@ -89,6 +89,7 @@ sealed class MainForm : Form {
 
 
     volatile bool running,paused; double aspect=16.0/9; uint mouseButtons;
+    volatile bool endReached;bool numberEntry,blockedEndClick;
     HashSet<int> held=new HashSet<int>();
     readonly string settingsFile=System.IO.Path.Combine(Preferences.Root,"DualSlide.settings");
     void MatchNativeState(){
@@ -96,11 +97,14 @@ sealed class MainForm : Form {
         synchronizing=true;
         try{
         int state=(int)masterShow.View.State;
-        if(state==5){Stop();return;}
+        // The native end screen is not an explicit request to exit. Return to
+        // the last slide without restarting it, retaining its animation state.
+        if(state==5){masterShow.View.Last();masterShow.View.State=1;state=1;}
         int slide=(int)masterShow.View.Slide.SlideIndex;
         int click=(int)masterShow.View.GetClickIndex();
         // PowerPoint can change slides between COM reads. Never apply a mixed snapshot.
         if((int)masterShow.View.Slide.SlideIndex!=slide)return;
+        endReached=PresenterAtEnd();
         if((int)followerShow.View.Slide.SlideIndex!=slide)followerShow.View.GotoSlide(slide,-1);
         if((int)followerShow.View.Slide.SlideIndex!=slide)return;
         if(click>(int)followerShow.View.GetClickCount())return;
@@ -139,7 +143,7 @@ sealed class MainForm : Form {
     }
     public MainForm() {
         using(var iconStream=typeof(MainForm).Assembly.GetManifestResourceStream("DualSlide.Icon.ico")){if(iconStream!=null){using(var sourceIcon=new Icon(iconStream)){Icon=(Icon)sourceIcon.Clone();}}}
-        Text="DualSlide 0.5.3";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
+        Text="DualSlide 0.5.4";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
         var title=new Label{Text="Present together",Font=new Font("Segoe UI Variable Display",25,FontStyle.Bold),AutoSize=true,Location=new Point(28,25)};
         var subtitle=new Label{Text="Two PowerPoint decks, one presentation.",Tag="muted",AutoSize=true,Location=new Point(32,78)};
         Controls.AddRange(new Control[]{title,subtitle});
@@ -285,6 +289,10 @@ sealed class MainForm : Form {
         Rectangle b=screen.Bounds;Native.SetWindowPos(h,IntPtr.Zero,b.X,b.Y,b.Width,b.Height,0x624);
     }
     bool Active(){return running&&!paused&&Native.GetForegroundWindow()==masterHandle;}
+    static bool ForwardKey(int key){return key==13||key==32||key==34||key==39||key==40||key==78;}
+    bool PresenterAtEnd(){return (int)masterShow.View.Slide.SlideIndex==(int)master.Slides.Count&&(int)masterShow.View.GetClickIndex()>=(int)masterShow.View.GetClickCount();}
+    void AdvancePresenter(){if(!PresenterAtEnd())masterShow.View.Next();}
+    void QueueStep(int direction){if(!Active())return;navigation.Enqueue(direction);ProcessNavigation();}
     bool Supported(int key){return key==8||key==13||key==27||key==32||(key>=33&&key<=40)||(key>=48&&key<=57)||(key>=96&&key<=105)||key==66||key==87||key==17||key==162||key==163;}
     IntPtr Keyboard(int code,IntPtr msg,IntPtr data){
         if(code>=0){var k=(Native.Key)Marshal.PtrToStructure(data,typeof(Native.Key));int key=(int)k.Code;bool up=msg.ToInt32()==0x101||msg.ToInt32()==0x105;
@@ -293,10 +301,29 @@ sealed class MainForm : Form {
                 // Consume Escape before PowerPoint can enter its independent close/save path.
                 if(!up)BeginInvoke((Action)Stop);return new IntPtr(1);
             }
+            bool plain=(Native.GetAsyncKeyState(17)&0x8000)==0&&(Native.GetAsyncKeyState(18)&0x8000)==0&&(Native.GetAsyncKeyState(91)&0x8000)==0&&(Native.GetAsyncKeyState(92)&0x8000)==0;
+            if(Active()&&plain){
+                if(!up&&((key>=48&&key<=57)||(key>=96&&key<=105)))numberEntry=true;
+                if(ForwardKey(key)){
+                    // Keep PowerPoint's number+Enter slide selection intact.
+                    bool numbered=key==13&&numberEntry;
+                    if(!up)numberEntry=false;
+                    if(!numbered){if(!up)BeginInvoke((Action)(()=>QueueStep(1)));return new IntPtr(1);}
+                }else if(!up&&!((key>=48&&key<=57)||(key>=96&&key<=105)))numberEntry=false;
+            }
+            if(running&&foreground==followerHandle&&endReached&&plain&&ForwardKey(key))return new IntPtr(1);
             if(!up&&Supported(key)&&Active()&&(Native.GetAsyncKeyState(18)&0x8000)==0&&(Native.GetAsyncKeyState(91)&0x8000)==0&&(Native.GetAsyncKeyState(92)&0x8000)==0)Command(key);
         }return Native.CallNextHookEx(keyHook,code,msg,data);
     }
     IntPtr MouseInput(int code,IntPtr msg,IntPtr data){
+        if(code>=0){
+            int message=msg.ToInt32();
+            if(message==0x202&&blockedEndClick){blockedEndClick=false;return new IntPtr(1);}
+            if(message==0x201&&running&&endReached){
+                IntPtr foreground=Native.GetForegroundWindow();var mouse=(Native.Mouse)Marshal.PtrToStructure(data,typeof(Native.Mouse));
+                if((foreground==masterHandle||foreground==followerHandle)&&Native.Client(foreground).Contains(mouse.Point)&&(Native.GetAsyncKeyState(17)&0x8000)==0){blockedEndClick=true;return new IntPtr(1);}
+            }
+        }
         if(code>=0&&msg.ToInt32()==0x20A&&Active()){
             var mouse=(Native.Mouse)Marshal.PtrToStructure(data,typeof(Native.Mouse));
             if(Native.Client(masterHandle).Contains(mouse.Point)){
@@ -317,7 +344,7 @@ sealed class MainForm : Form {
         if(navigating||navigation.Count==0)return;
         if(!Active()){navigation.Clear();return;}
         navigating=true;bool retry=false;
-        try{int direction=navigation.Peek();if(direction>0)masterShow.View.Next();else masterShow.View.Previous();navigation.Dequeue();MatchNativeState();}
+        try{int direction=navigation.Peek();if(direction>0)AdvancePresenter();else masterShow.View.Previous();navigation.Dequeue();MatchNativeState();}
         catch(COMException){retry=true;status.Text="PowerPoint is busy; navigation will retry automatically.";}
         finally{navigating=false;}
         if(!retry&&navigation.Count>0&&running)BeginInvoke((Action)ProcessNavigation);
@@ -350,7 +377,7 @@ sealed class MainForm : Form {
     void Fail(string message){paused=true;pointer.Hide();ReleaseInputs();pause.Text="Resume";status.Text=message;}
     void Stop(){
         if(stopping){FinishStop();return;}
-        stopping=true;running=false;ReleaseInputs();pointer.EndSession();
+        stopping=true;running=false;endReached=false;numberEntry=blockedEndClick=false;ReleaseInputs();pointer.EndSession();
         if(input!=null){input.Dispose();input=null;}keyHook=mouseHook=IntPtr.Zero;
         start.Enabled=pause.Enabled=stop.Enabled=resync.Enabled=false;status.Text="Closing both slideshows without saving...";
         FinishStop();

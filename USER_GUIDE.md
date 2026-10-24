@@ -55,6 +55,8 @@ The last file and display selections are restored on restart. Preferences are st
 
 - Escape on either slideshow stops both shows without saving or asking to save. Ending either show through PowerPoint's End Show command also stops the paired session, including while synchronization is paused.
 
+- Reaching the end of the deck keeps both shows on the last slide with its completed animations. Further ordinary forward keys, clicks, or wheel steps do not end the session. You can go backward and forward again; press Escape when you are ready to exit.
+
 
 
 Switch to the setup window to Pause, Resume, Reset current slide, or Stop. Reset restarts both shows at the beginning of the presenter's current slide. Stop closes the slideshows and only the presentations opened by DualSlide. Normally opened read-only presentations you already had open stay open with their existing unsaved edits preserved. No presentation is saved by the tool, and no presentation copies are created. The original files remain locked against writes until cleanup finishes.
