@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none">
+  <title>DualSlide</title>
+  <desc>Two overlapping presentation displays with arrows showing synchronized movement.</desc>
+  <defs>
+    <linearGradient id="tile" x1="24" y1="16" x2="230" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1677D2"/>
+      <stop offset="1" stop-color="#123E87"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="103" y1="120" x2="215" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#25B8E5"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="url(#tile)"/>
+  <path d="M78 140v16m-22 0h44" stroke="#D8F2FF" stroke-width="8" stroke-linecap="round"/>
+  <rect x="28" y="51" width="132" height="89" rx="10" fill="#164A92" stroke="#EAF8FF" stroke-width="8"/>
+  <path d="M48 76h58m-58 18h88m-88 18h36" stroke="#D8F2FF" stroke-width="7" stroke-linecap="round"/>
+  <rect x="92" y="113" width="140" height="94" rx="14" fill="#123E87"/>
+  <path d="M162 201v17m-23 0h46" stroke="#F4FCFF" stroke-width="8" stroke-linecap="round"/>
+  <rect x="100" y="121" width="124" height="80" rx="8" fill="url(#screen)" stroke="#F4FCFF" stroke-width="8"/>
+  <path d="M119 143h56m-56 18h84m-84 18h34" stroke="#124D8C" stroke-width="7" stroke-linecap="round"/>
+  <path d="M183 54c24 0 39 14 39 37m-12-10 12 12 12-12M73 215c-24 0-39-14-39-37m-12 10 12-12 12 12" stroke="#FFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
