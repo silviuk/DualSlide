@@ -4,21 +4,21 @@
 
 # DualSlide
 
-Present two matching PowerPoint decks on separate displays. Navigate the presenter deck normally while the audience deck follows your slides, animation steps, and pointer.
+Show two PowerPoint decks on separate screens and control both from one presentation. As you move through the presenter deck, the audience deck follows the slides, animation steps, and pointer.
 
 **Windows 11 · Microsoft PowerPoint**
 
-## Why DualSlide?
+## What you can do
 
-- **Present in parallel.** Keep two matching decks together while showing different content to each screen. PowerPoint renders both native slideshows.
-- **Keep the small details.** Ordinary clicks, keyboard and wheel navigation, animation steps, and native cursor or laser movements follow along.
-- **Set up, then present.** Identify your displays, recall paired decks, and start. Pause, reset the current slide, or press Escape to end both shows.
+- **Show different slides to each screen.** Use one deck for each screen—for example, two language versions of the same talk. PowerPoint runs both slideshows.
+- **Animations and pointers follow along.** Use your usual clicks, keys, and mouse wheel. The other deck follows ordinary animation steps and your cursor or laser pointer.
+- **Choose your decks and screens.** Use Identify displays to find the right screens. DualSlide remembers paired decks for next time. During a talk, you can pause, reset the current slide, or press Escape to stop both shows.
 
-## See it in action
+## How it works
 
 ![Presenter deck → DualSlide → Audience deck](docs/assets/connection.svg)
 
-Ideal for translated slides or parallel decks with the same structure.
+The two decks need the same slide and animation structure.
 
 ## Get started
 
@@ -26,18 +26,18 @@ Ideal for translated slides or parallel decks with the same structure.
 2. Choose two matching decks and a different display for each. Use Windows Extend mode.
 3. Select Start and present as usual. Press Escape to end both shows.
 
-The original presentations are opened read-only; no deck copies are created. DualSlide closes app-owned decks without saving. Existing borrowed read-only decks are left open.
+DualSlide opens your presentations read-only and doesn’t make copies. When you stop, it closes the decks it opened without saving. Read-only decks that were already open stay open.
 
-## Requirements & limits
+## Before you start
 
 Windows 11 x64, desktop Microsoft PowerPoint installed and configured, and two displays in Extend mode. The decks need matching slide counts, aspect ratios, and ordinary animation sequences. PowerPoint for the web is not supported.
 
-Synchronization follows PowerPoint slide/build state and is not frame-locked. Shape-specific animation triggers, ink mirroring, and synchronized audio/video clocks are outside scope. Close editable sessions using these files before starting.
+DualSlide follows PowerPoint’s slide and animation state, so the two shows won’t be perfectly frame-synchronized. Shape-specific triggers, ink, and synchronized audio or video aren’t supported. Close any editable PowerPoint sessions using these files before starting.
 
-## Documentation & contributing
+## More information
 
 See the [user guide](USER_GUIDE.md), [development guide](docs/DEVELOPMENT.md), and [interactive verification guide](VERIFICATION.md).
 
-Found a problem or have an idea? [Open an issue](https://github.com/silviuk/DualSlide/issues). If the app helps you, [support its development on Ko-fi](https://ko-fi.com/silviuvlasceanu).
+Something not working, or have a suggestion? [Open an issue](https://github.com/silviuk/DualSlide/issues). If you’d like to support my work, [you can leave a tip on Ko-fi](https://ko-fi.com/silviuvlasceanu).
 
 © 2026 Silviu Vlasceanu.
