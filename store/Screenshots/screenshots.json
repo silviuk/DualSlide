@@ -1,0 +1,16 @@
+{
+  "version": "0.5.4",
+  "language": "en-us",
+  "screenshots": [
+    {
+      "fileName": "setup-light.png",
+      "description": "DualSlide setup in light mode: select paired decks and separate displays.",
+      "sha256": "59a40f1ed569fba3e3882d0649321efb2324c1ae7afaaeff50b7cd1cbf2a7343"
+    },
+    {
+      "fileName": "setup-dark.png",
+      "description": "DualSlide setup in dark mode: presentation controls and laser option.",
+      "sha256": "a66eafbed1cc1ae6cac42fa3f30cad99359644c2a48621ca69a053fbbfa51b95"
+    }
+  ]
+}
