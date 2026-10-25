@@ -23,6 +23,9 @@ jobs:
       - name: Build
         shell: pwsh
         run: ./build.ps1
+      - name: Test Store publishing guards
+        shell: pwsh
+        run: ./tools/Test-StorePublishing.ps1
       - name: Check release version
         shell: pwsh
         run: |
@@ -51,6 +54,9 @@ jobs:
       - name: Package application
         shell: pwsh
         run: ./package.ps1
+      - name: Package for Microsoft Store
+        shell: pwsh
+        run: ./build-msix.ps1
       - name: Upload package and checksum
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -58,6 +64,8 @@ jobs:
           path: |
             dist/DualSlide-*.zip
             dist/DualSlide-*.zip.sha256
+            dist/DualSlide-*.msix
+            dist/DualSlide-*.msix.sha256
           if-no-files-found: error
 
   release:
@@ -86,4 +94,4 @@ jobs:
         run: |
           cd artifacts
           sha256sum --check *.sha256
-          gh release create "$RELEASE_TAG" *.zip *.sha256 --verify-tag --title "DualSlide ${RELEASE_TAG#v}" --notes-file ../RELEASE_NOTES.md
+          gh release create "$RELEASE_TAG" *.zip *.msix *.sha256 --verify-tag --title "DualSlide ${RELEASE_TAG#v}" --notes-file ../RELEASE_NOTES.md
