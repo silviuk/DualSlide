@@ -14,15 +14,11 @@ Show two PowerPoint decks on separate screens and control both from one presenta
 - **Animations and pointers follow along.** Use your usual clicks, keys, and mouse wheel. The other deck follows ordinary animation steps and your cursor or laser pointer.
 - **Choose your decks and screens.** Use Identify displays to find the right screens. DualSlide remembers paired decks for next time. During a talk, you can pause, reset the current slide, or press Escape to stop both shows.
 
-## Screenshots
+## Screenshot
 
-<img src="docs/assets/setup-light.png" alt="DualSlide setup window in light mode." width="700">
+<img src="docs/assets/setup-windows11.png" alt="DualSlide 0.5.4 running on Windows 11 with rounded controls." width="700">
 
-*Choose your decks and displays in light mode.*
-
-<img src="docs/assets/setup-dark.png" alt="DualSlide setup window in dark mode." width="700">
-
-*The same setup window in dark mode.*
+*Captured from DualSlide 0.5.4 on Windows 11, 25 October 2026.*
 
 ## Get started
 
