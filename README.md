@@ -14,6 +14,8 @@ Show two PowerPoint decks on separate screens and control both from one presenta
 - **Animations and pointers follow along.** Use your usual clicks, keys, and mouse wheel. The other deck follows ordinary animation steps and your cursor or laser pointer.
 - **Choose your decks and screens.** Use Identify displays to find the right screens. DualSlide remembers paired decks for next time. During a talk, you can pause, reset the current slide, or press Escape to stop both shows.
 
+- **Keep decks open for editing.** Enable the option before starting to reopen both app-owned presentations for editing after the slideshows end. DualSlide never saves them.
+
 ## Screenshot
 
 <img src="docs/assets/setup-windows11.png" alt="DualSlide 0.5.4 running on Windows 11 with rounded controls." width="700">
@@ -26,7 +28,7 @@ Show two PowerPoint decks on separate screens and control both from one presenta
 2. Choose two matching decks and a different display for each. Use Windows Extend mode.
 3. Select Start and present as usual. Press Escape to end both shows.
 
-DualSlide opens your presentations read-only and doesn’t make copies. When you stop, it closes the decks it opened without saving. Read-only decks that were already open stay open.
+DualSlide opens your presentations read-only and doesn’t make copies. When you stop, it closes the decks it opened without saving. Enable **Keep presentations open for editing after slideshow** to release write protection and reopen those original files normally in PowerPoint. DualSlide never saves your edits; saving is your choice. This setting is off by default and remembered. Read-only decks that were already open stay open in their existing mode, preserving unsaved edits.
 
 ## Before you start
 

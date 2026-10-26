@@ -51,6 +51,13 @@ jobs:
             & ".build/$test.exe"
             if ($LASTEXITCODE -ne 0) { throw "$test failed" }
           }
+      - name: Run keep-open regression
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          ./test-build.ps1 -Source KeepOpenTest.cs -Main KeepOpenTest -Output .build/KeepOpenTest.exe
+          & ./.build/KeepOpenTest.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Keep-open regression failed' }
       - name: Package application
         shell: pwsh
         run: ./package.ps1

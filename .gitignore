@@ -40,3 +40,6 @@ node_modules/
 !/OwnershipTest.cs
 !/FeatureCheck.cs
 !/VisualSessionTest.cs
+
+!/KeepOpenTest.cs
+!/KeepOpenLiveTest.cs

@@ -1,4 +1,4 @@
-# DualSlide 0.5.2
+# DualSlide 0.5.5
 
 
 
@@ -85,3 +85,7 @@ Copyright (C) 2026 Silviu Vlasceanu. The footer links to https://github.com/silv
 Input handling runs independently of PowerPoint. If the controller stops responding for 15 seconds, recovery removes its input hooks, hides its pointer, requests that both slideshow windows minimize, and requests cancellation of the stalled Office call. Once control returns, both shows close through the normal no-save path. Original-file write guards remain held until cleanup completes.
 
 Presentation windows are ordinary windows, so other applications can cover them. On Stop, DualSlide quits PowerPoint if it started the process and no presentations remain. A pre-existing PowerPoint process or any remaining presentations are preserved. DualSlide never force-kills PowerPoint. A hard Office or graphics-driver hang may reject cancellation/minimization; retain `%LOCALAPPDATA%\DualSlide\DualSlide.log` when reporting a problem.
+
+## Keep presentations open for editing
+
+Enable **Keep presentations open for editing after slideshow** before starting. After Escape, Stop, or ending either show, DualSlide closes both read-only sessions without saving, releases its write locks, then reopens app-owned original decks as editable PowerPoint presentations. DualSlide never modifies or saves those reopened decks. You can edit and save them yourself. This option is off by default and remembered. Existing borrowed read-only decks stay open in their existing mode so unsaved edits are preserved. Failed starts still clean up app-owned decks.

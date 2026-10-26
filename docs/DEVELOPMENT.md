@@ -16,7 +16,7 @@ To build a distributable ZIP and SHA-256 checksum:
 .\package.ps1
 ```
 
-This rebuilds the executable and produces `dist/DualSlide-0.5.4.zip` and its `.sha256` file, including documentation and icon assets. The version is read from the executable metadata.
+This rebuilds the executable and produces `dist/DualSlide-0.5.5.zip` and its `.sha256` file, including documentation and icon assets. The version is read from the executable metadata.
 
 ### Icon
 
@@ -56,3 +56,5 @@ Synchronization follows PowerPoint's slide/build state and is not frame-locked. 
 | `ModernWindows.cs` | Theme, accent color, display discovery, and identification |
 | `DeckHistory.cs` | Recent presentations and paired selections |
 | `SessionSafety.cs` | Single-instance handling, input hooks, recovery, and logging |
+
+`KeepOpenTest.cs` verifies editable reopening, shutdown ordering, retries, preferences, and borrowed-document preservation without PowerPoint. `KeepOpenLiveTest.cs` generates disposable decks and checks Stop and either native End Show on two displays, including editable state and unchanged original hashes/timestamps.

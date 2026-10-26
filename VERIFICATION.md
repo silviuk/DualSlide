@@ -1,3 +1,11 @@
+# Keep-open option 0.5.5 (2026-10-26)
+
+- Built against the latest 0.5.4 source, retaining pointer, animation, application cleanup, and Windows UI changes.
+- KeepOpenTest passed: default close; editable reopen only after both read-only decks and all write guards are released; transient busy retries without duplicate opens; original bytes unchanged; borrowed decks untouched; legacy preferences load and the new choice persists.
+- AnimationReplayTest passed, including final-build clamping, end-screen recovery, and backward navigation.
+- KeepOpenLiveTest passed on two displays with generated disposable presentations. Stop, presenter End Show, and audience End Show each reopened both originals editable (ReadOnly=0), with clean Saved state, unchanged file hashes/timestamps, and controller write locks released.
+- Tests never used or changed user presentations. CI runs the two tests that do not require PowerPoint, plus the existing pointer/cleanup and Store packaging checks.
+
 # Version 0.5.4 (2026-10-24)
 
 - End-of-deck handling retains both live shows on the final slide. Forward keyboard commands and wheel steps are guarded before calling native Next; terminal clicks are suppressed. A native done/end screen returns to Last without resetting its completed animations. Escape still uses coordinated no-save shutdown.

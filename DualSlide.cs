@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Text;
-[assembly:System.Reflection.AssemblyVersion("0.5.4.0")]
-[assembly:System.Reflection.AssemblyFileVersion("0.5.4.0")]
+[assembly:System.Reflection.AssemblyVersion("0.5.5.0")]
+[assembly:System.Reflection.AssemblyFileVersion("0.5.5.0")]
 [assembly:System.Reflection.AssemblyCopyright("(C) 2026 Silviu Vlasceanu")]
 
 static class Program {
@@ -73,10 +73,11 @@ sealed class MainForm : Form {
     readonly Queue<int> navigation=new Queue<int>();int wheelRemainder,lastWheel;bool navigating;
     ComboBox masterMonitor=new ModernComboBox(),followerMonitor=new ModernComboBox();
     Button start=new ModernButton(), pause=new ModernButton(),stop=new ModernButton(),resync=new ModernButton();
-    Label status=new Label(); CheckBox laser=new CheckBox();
+    Label status=new Label(); CheckBox laser=new CheckBox(),keepOpen=new CheckBox();
     dynamic ppt,master,follower,masterShow,followerShow;
     bool ownPowerPoint;
-    bool ownMaster,ownFollower,synchronizing,stopping,cleaning,closeAfterStop,masterConfigured,followerConfigured;
+    bool keepDecksForSession,ownMaster,ownFollower,synchronizing,stopping,cleaning,closeAfterStop,masterConfigured,followerConfigured;
+    readonly Queue<string> reopenForEditing=new Queue<string>();string reopenError;
     readonly List<System.IO.FileStream> sourceGuards=new List<System.IO.FileStream>();
     int masterType, followerType, masterPresenter, followerPresenter,masterScrollbar,followerScrollbar;
     IntPtr masterHandle,followerHandle,masterCanvas,followerCanvas,keyHook,mouseHook;
@@ -143,7 +144,7 @@ sealed class MainForm : Form {
     }
     public MainForm() {
         using(var iconStream=typeof(MainForm).Assembly.GetManifestResourceStream("DualSlide.Icon.ico")){if(iconStream!=null){using(var sourceIcon=new Icon(iconStream)){Icon=(Icon)sourceIcon.Clone();}}}
-        Text="DualSlide 0.5.4";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
+        Text="DualSlide 0.5.5";Font=new Font("Segoe UI Variable Text",10.5f);AutoScaleMode=AutoScaleMode.Dpi;ClientSize=new Size(850,708);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
         var title=new Label{Text="Present together",Font=new Font("Segoe UI Variable Display",25,FontStyle.Bold),AutoSize=true,Location=new Point(28,25)};
         var subtitle=new Label{Text="Two PowerPoint decks, one presentation.",Tag="muted",AutoSize=true,Location=new Point(32,78)};
         Controls.AddRange(new Control[]{title,subtitle});
@@ -151,7 +152,7 @@ sealed class MainForm : Form {
         AddDeckCard("Audience",followerPath,followerMonitor,304);
         foreach(var display in Displays.Read()){masterMonitor.Items.Add(display);followerMonitor.Items.Add(display);}
         masterMonitor.SelectedIndex=0;followerMonitor.SelectedIndex=Screen.AllScreens.Length>1?1:0;
-        try{string choiceSource=System.IO.File.Exists(settingsFile)?settingsFile:System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"DualSlide.settings");if(System.IO.File.Exists(choiceSource)){var saved=System.IO.File.ReadAllLines(choiceSource);if(saved.Length==4){masterPath.Text=saved[0];followerPath.Text=saved[1];SelectDisplay(masterMonitor,saved[2]);SelectDisplay(followerMonitor,saved[3]);}}}catch{}
+        try{string choiceSource=System.IO.File.Exists(settingsFile)?settingsFile:System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"DualSlide.settings");if(System.IO.File.Exists(choiceSource)){var saved=System.IO.File.ReadAllLines(choiceSource);if(saved.Length>=4){masterPath.Text=saved[0];followerPath.Text=saved[1];SelectDisplay(masterMonitor,saved[2]);SelectDisplay(followerMonitor,saved[3]);keepOpen.Checked=saved.Length>4&&saved[4]==Boolean.TrueString;}}}catch{}
         if(history.Files().Length==0&&System.IO.File.Exists(masterPath.Text)&&System.IO.File.Exists(followerPath.Text))try{history.Remember(masterPath.Text,followerPath.Text);}catch{}
         RefreshHistory();
         if(masterMonitor.SelectedIndex==followerMonitor.SelectedIndex&&masterMonitor.Items.Count>1)followerMonitor.SelectedIndex=masterMonitor.SelectedIndex==0?1:0;
@@ -159,13 +160,15 @@ sealed class MainForm : Form {
         followerMonitor.SelectedIndexChanged+=(s,e)=>KeepDisplaysDifferent(followerMonitor,masterMonitor);
         start.Text="Start presentation";pause.Text="Pause";stop.Text="Stop";resync.Text="Reset current slide";
         start.SetBounds(32,550,180,42);pause.SetBounds(224,550,112,42);stop.SetBounds(348,550,112,42);resync.SetBounds(472,550,190,42);
-        laser.Text="Start with laser pointer";laser.SetBounds(32,491,330,30);
+        laser.Text="Start with laser pointer";laser.SetBounds(32,485,520,27);
+        keepOpen.Text="Keep presentations open for editing after slideshow";keepOpen.SetBounds(32,515,560,27);keepOpen.AccessibleName=keepOpen.Text;
+        keepOpen.CheckedChanged+=(s,e)=>SaveChoices();configuration.Add(keepOpen);
         var identify=new ModernButton{Text="Identify displays"};identify.SetBounds(638,486,180,38);identify.Click+=(s,e)=>Displays.Identify();
         status.SetBounds(32,613,786,40);status.Tag="muted";status.Text="Choose matching decks and two different displays.";
         var copyright=new Label{Text="\u00A9 2026 Silviu Vlasceanu",Tag="muted",AutoSize=true,Location=new Point(32,672),Font=new Font(Font.FontFamily,9)};
         var github=new LinkLabel{Text="github.com/silviuk/DualSlide",AutoSize=true,Location=new Point(586,672),Font=new Font(Font.FontFamily,9),AccessibleName="DualSlide on GitHub"};
         github.LinkClicked+=(s,e)=>{try{Process.Start(new ProcessStartInfo("https://github.com/silviuk/DualSlide"){UseShellExecute=true});}catch(Exception ex){status.Text="Could not open GitHub: "+ex.Message;}};
-        Controls.AddRange(new Control[]{start,pause,stop,resync,laser,identify,status,copyright,github});pause.Enabled=stop.Enabled=resync.Enabled=false;
+        Controls.AddRange(new Control[]{start,pause,stop,resync,laser,keepOpen,identify,status,copyright,github});pause.Enabled=stop.Enabled=resync.Enabled=false;
         Shown+=(s,e)=>ModernWindows.Apply(this);
         start.Click+=(s,e)=>Start();stop.Click+=(s,e)=>Stop();
         pause.Click+=(s,e)=>{if(!running)return;paused=!paused;ReleaseInputs();pointer.Hide();pause.Text=paused?"Resume":"Pause";status.Text=paused?"Synchronization paused.":"Synchronized; return to presenter slideshow.";};
@@ -189,13 +192,14 @@ sealed class MainForm : Form {
     void ValidateAssociation(ComboBox box){if(!String.Equals(box.Text,box.Tag as string,StringComparison.OrdinalIgnoreCase))Associate(box);}
     void Associate(ComboBox box){if(choosingPair||running)return;box.Tag=box.Text;string path=box.Text.Trim();if(String.IsNullOrEmpty(path))return;try{path=System.IO.Path.GetFullPath(path);}catch{return;}string other=history.Partner(path);if(other==null)return;choosingPair=true;try{box.Text=path;box.Tag=path;var counterpart=box==masterPath?followerPath:masterPath;counterpart.Text=other;counterpart.Tag=other;}finally{choosingPair=false;}}
     void KeepDisplaysDifferent(ComboBox changed,ComboBox other){if(choosingDisplay)return;choosingDisplay=true;try{if(changed.SelectedIndex==other.SelectedIndex&&other.Items.Count>1)for(int i=0;i<other.Items.Count;i++)if(i!=changed.SelectedIndex){other.SelectedIndex=i;break;}}finally{choosingDisplay=false;}SaveChoices();}
-    void SaveChoices(){try{if(masterMonitor.SelectedItem!=null&&followerMonitor.SelectedItem!=null)System.IO.File.WriteAllLines(settingsFile,new[]{masterPath.Text,followerPath.Text,((DisplayChoice)masterMonitor.SelectedItem).Device,((DisplayChoice)followerMonitor.SelectedItem).Device});}catch{}}
+    void SaveChoices(){try{if(masterMonitor.SelectedItem!=null&&followerMonitor.SelectedItem!=null)System.IO.File.WriteAllLines(settingsFile,new[]{masterPath.Text,followerPath.Text,((DisplayChoice)masterMonitor.SelectedItem).Device,((DisplayChoice)followerMonitor.SelectedItem).Device,keepOpen.Checked.ToString()});}catch{}}
     static void SelectDisplay(ComboBox box,string id){for(int i=0;i<box.Items.Count;i++){var display=(DisplayChoice)box.Items[i];if(display.Device==id||display.ToString()==id){box.SelectedIndex=i;return;}}}
     protected override void WndProc(ref Message m){
         if(m.Msg==SingleInstance.ActivateMessage){if(running&&Native.IsWindow(masterHandle))Native.SetForegroundWindow(masterHandle);else{if(WindowState==FormWindowState.Minimized)WindowState=FormWindowState.Normal;Show();Activate();}return;}
         base.WndProc(ref m);if((m.Msg==0x1A||m.Msg==0x320||m.Msg==0x31E||m.Msg==0x15)&&IsHandleCreated&&!IsDisposed)BeginInvoke((Action)(()=>{if(!IsDisposed)ModernWindows.Apply(this);}));}
     void Start(){
         if(running||stopping)return;
+        reopenError=null;keepDecksForSession=false; // Failed starts always close app-owned decks.
         try {
             SessionLog.Write("Starting presentation session.");
             if(!System.IO.File.Exists(masterPath.Text)||!System.IO.File.Exists(followerPath.Text))throw new Exception("Choose two existing PowerPoint files.");
@@ -228,6 +232,7 @@ sealed class MainForm : Form {
             if(ownMaster)master.Saved=-1;if(ownFollower)follower.Saved=-1;
             input=new InputPump(keyCallback,mouseCallback);keyHook=input.KeyboardHandle;mouseHook=input.MouseHandle;
             watchdog.Track(masterHandle,followerHandle);
+            keepDecksForSession=keepOpen.Checked;
             running=true;paused=false;start.Enabled=false;pause.Enabled=stop.Enabled=resync.Enabled=true;foreach(var control in configuration)control.Enabled=false;status.Text="Running. Input on presenter show is mirrored to audience.";
             try{history.Remember(masterPath.Text,followerPath.Text);RefreshHistory();}catch(Exception ex){status.Text="Running. Recent files could not be saved: "+ex.Message;}
             SaveChoices();
@@ -392,7 +397,11 @@ sealed class MainForm : Form {
             if(show!=null&&Native.IsWindow(handle)&&Native.IsWindowVisible(handle)){
                 try{show.View.Exit();}catch(COMException ex){if(!Gone(ex))throw;}
             }
-            if(owned){deck.Saved=-1;deck.Close();}
+            if(owned){
+                string reopenPath=keepDecksForSession?(string)deck.FullName:null;
+                deck.Saved=-1;deck.Close();
+                if(reopenPath!=null)reopenForEditing.Enqueue(reopenPath);
+            }
             else if(restoreSettings){deck.SlideShowSettings.ShowType=showType;deck.SlideShowSettings.ShowPresenterView=presenterView;deck.SlideShowSettings.ShowScrollbar=scrollbar;}
             return true;
         }catch(COMException ex){if(Gone(ex))return true;status.Text="Waiting for PowerPoint to close both shows without saving...";return false;}
@@ -403,11 +412,23 @@ sealed class MainForm : Form {
             if(CloseDeck(master,masterShow,masterHandle,ownMaster,masterType,masterPresenter,masterScrollbar,masterConfigured)){ReleaseCom((object)masterShow);ReleaseCom((object)master);master=masterShow=null;masterHandle=masterCanvas=IntPtr.Zero;}
             if(CloseDeck(follower,followerShow,followerHandle,ownFollower,followerType,followerPresenter,followerScrollbar,followerConfigured)){ReleaseCom((object)followerShow);ReleaseCom((object)follower);follower=followerShow=null;followerHandle=followerCanvas=IntPtr.Zero;}
             if(master!=null||follower!=null)return;
+            foreach(var guard in sourceGuards)guard.Dispose();sourceGuards.Clear();
+            // Reopen only after BOTH read-only decks close and ALL write guards release.
+            while(reopenForEditing.Count>0){
+                string path=reopenForEditing.Peek();dynamic presentations=null;
+                try{
+                    presentations=ppt.Presentations;
+                    object editable=presentations.Open(path,0,0,-1);
+                    reopenForEditing.Dequeue();ReleaseCom(editable);
+                }catch(COMException ex){
+                    if(ex.ErrorCode==unchecked((int)0x80010001)||ex.ErrorCode==unchecked((int)0x8001010A)){status.Text="Waiting for PowerPoint to reopen presentations for editing...";return;}
+                    reopenForEditing.Dequeue();reopenError="Could not reopen for editing: "+path+". "+ex.Message;SessionLog.Write(reopenError);
+                }finally{ReleaseCom((object)presentations);}
+            }
             if(!ClosePowerPoint())return;
             ownMaster=ownFollower=masterConfigured=followerConfigured=false;
-            foreach(var guard in sourceGuards)guard.Dispose();sourceGuards.Clear();
             watchdog.Disarm();stopping=false;paused=false;sourceRect=targetRect=Rectangle.Empty;
-            start.Enabled=true;foreach(var control in configuration)control.Enabled=true;pause.Text="Pause";status.Text="Stopped. Original files unchanged.";
+            start.Enabled=true;foreach(var control in configuration)control.Enabled=true;pause.Text="Pause";status.Text=reopenError??(keepDecksForSession?"Stopped. Presentations left open for editing. DualSlide saved no files.":"Stopped. Original files unchanged.");keepDecksForSession=false;
             if(closeAfterStop){closeAfterStop=false;BeginInvoke((Action)(()=>{if(!IsDisposed)Close();}));}
         }finally{cleaning=false;}
     }
